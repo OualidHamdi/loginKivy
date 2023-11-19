@@ -1,5 +1,7 @@
 MDScreen:
     name: "signup"
+    password_field_active: False  # Variable de classe pour suivre l'état du champ de mot de passe
+
     MDFloatLayout:
         md_bg_color: 1, 1, 1, 1
         MDIconButton:
@@ -45,6 +47,7 @@ MDScreen:
         MDFloatLayout:
             size_hint: .7, .07
             pos_hint: {"center_x": .5, "center_y": .56}
+
             TextInput:
                 id: email_input
                 hint_text: "Email"
@@ -57,6 +60,8 @@ MDScreen:
                 font_size: "14sp"
                 cursor_width: "2sp"
                 multiline: False
+                on_text: self.text = self.text.strip()  # Utiliser strip() pour supprimer les espaces autour de l'adresse e-mail
+
             MDFloatLayout:
                 pos_hint: {"center_x": .45, "center_y": .0}
                 size_hint_y: .03
@@ -76,7 +81,21 @@ MDScreen:
                 font_size: "14sp"
                 cursor_width: "2sp"
                 multiline: False
-                password: True
+                password: not root.password_field_active  # Utilisez la variable de classe pour activer/désactiver le mot de passe
+                on_text_validate: self.parent.ids.another_input.focus = True
+            # Ajouter l'icône de l'œil pour afficher/masquer le mot de passe
+            MDIconButton:
+                icon: "eye" if root.password_field_active else "eye-off"  # Change l'icône en fonction de l'état du mot de passe
+                user_font_size: "18sp"
+                pos_hint: {"center_x": .9, "center_y": .5}
+                on_release:
+                    app.password_toggle(password_input)
+                    root.password_field_active = not root.password_field_active  # Inverse l'état du champ de mot de passe
+
+            MDFloatLayout:
+                pos_hint: {"center_x": .45, "center_y": .0}
+                size_hint_y: .03
+                md_bg_color: rgba(178, 178, 178, 255)
             MDFloatLayout:
                 pos_hint: {"center_x": .45, "center_y": .0}
                 size_hint_y: .03

@@ -1,6 +1,7 @@
 # login.kv
 <LoginScreen>:
     name: "login"
+    password_field_active: False  # Variable de classe pour suivre l'état du champ de mot de passe
     MDFloatLayout:
         md_bg_color: 1, 1, 1, 1
         MDIconButton:
@@ -23,10 +24,11 @@
             font_name: "MPoppins"
             font_size: "18sp"
             pos_hint: {"center_x": .6, "center_y": .79}
-            color: rgba(135, 133, 193, 255)
+            color: rgba(135, 133, 193, 255)  # Fix the closing parenthesis here
         MDFloatLayout:
             size_hint: .7, .07
-            pos_hint: {"center_x": .5, "center_y": .63}
+            pos_hint: {"center_x": .5, "center_y": .7}
+
             TextInput:
                 id: email_input
                 hint_text: "Email"
@@ -39,13 +41,17 @@
                 font_size: "14sp"
                 cursor_width: "2sp"
                 multiline: False
+                on_text: self.text = self.text.strip()  # Utiliser strip() pour supprimer les espaces autour de l'adresse e-mail
+
             MDFloatLayout:
                 pos_hint: {"center_x": .45, "center_y": .0}
                 size_hint_y: .03
                 md_bg_color: rgba(178, 178, 178, 255)
+
         MDFloatLayout:
             size_hint: .7, .07
             pos_hint: {"center_x": .5, "center_y": .5}
+
             TextInput:
                 id: password_input
                 hint_text: "Password"
@@ -58,11 +64,24 @@
                 font_size: "14sp"
                 cursor_width: "2sp"
                 multiline: False
-                password: True
+                password: not root.password_field_active  # Utilisez la variable de classe pour activer/désactiver le mot de passe
+                on_text_validate: self.parent.ids.another_input.focus = True
+
+            # Add the eye icon button for showing/hiding the password
+            MDIconButton:
+                icon: "eye" if root.password_field_active else "eye-off"  # Change l'icône en fonction de l'état du mot de passe
+                user_font_size: "18sp"
+                pos_hint: {"center_x": .9, "center_y": .5}
+                on_release:
+                    app.password_toggle(password_input)
+                    root.password_field_active = not root.password_field_active  # Inverse l'état du champ de mot de passe
             MDFloatLayout:
                 pos_hint: {"center_x": .45, "center_y": .0}
                 size_hint_y: .03
                 md_bg_color: rgba(178, 178, 178, 255)
+
+
+
         Button:
             text: "LOGIN"
             size_hint: .66, .065
@@ -77,12 +96,14 @@
                     radius: [5]
             on_release:
                 root.handle_login()
+
         MDTextButton:
             text: "Forgot Password?"
-            pos_hint: {"center_x": .5,"center_y": .28}
+            pos_hint: {"center_x": .5, "center_y": .28}
             color: rgba(68, 78, 132, 255)
             font_size: "12sp"
             font_name: "BPoppins"
+
         MDLabel:
             text: "or"
             color: rgba(52, 0, 231, 255)
@@ -90,14 +111,17 @@
             font_size: "13sp"
             font_name: "BPoppins"
             halign: "center"
+
         MDFloatLayout:
             md_bg_color: rgba(178, 178, 178, 255)
             size_hint: .3, .002
-            pos_hint:{"center_x": .3, "center_y": .218}
+            pos_hint: {"center_x": .3, "center_y": .218}
+
         MDFloatLayout:
             md_bg_color: rgba(178, 178, 178, 255)
             size_hint: .3, .002
-            pos_hint:{"center_x": .7, "center_y": .218}
+            pos_hint: {"center_x": .7, "center_y": .218}
+
         MDLabel:
             text: "Social Media Login"
             font_name: "BPoppins"
@@ -105,27 +129,30 @@
             halign: "center"
             pos_hint: {"center_y": .16}
             color: rgba(135, 133, 193, 255)
+
         MDGridLayout:
             cols: 3
             size_hint: .48, .07
-            pos_hint:{"center_x": .5, "center_y": .1}
+            pos_hint: {"center_x": .5, "center_y": .1}
             Image:
-                source : "assets/google.png"
+                source: "assets/google.png"
             Image:
-                source : "assets/facebook.png"
+                source: "assets/facebook.png"
             Image:
-                source : "assets/apple.png"
+                source: "assets/apple.png"
+
         MDLabel:
             text: "Don't have an account?"
             font_name: "BPoppins"
             font_size: "11sp"
-            pos_hint:{"center_x": .68, "center_y": .04}
+            pos_hint: {"center_x": .68, "center_y": .04}
             color: rgba(135, 133, 193, 255)
+
         MDTextButton:
             text: "Sign up"
             font_name: "BPoppins"
             font_size: "11sp"
-            pos_hint:{"center_x": .75, "center_y": .04}
+            pos_hint: {"center_x": .75, "center_y": .04}
             color: rgba(52, 0, 231, 255)
             on_release:
                 root.manager.transition.direction = "left"

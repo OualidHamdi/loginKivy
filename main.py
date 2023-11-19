@@ -1,15 +1,29 @@
 # main.py
 import requests
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
-from urllib.parse import quote, quote_plus
 from kivymd.app import MDApp
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
-from kivy.uix.screenmanager import ScreenManager, Screen
-from firebase import firebase
-from kivy.network.urlrequest import UrlRequest
+import pyrebase
 
 Window.size = (310, 580)
+
+# Configurer votre configuration Firebase ici
+firebase_config = {
+    "apiKey": "AIzaSyATXmGkSdu4Nvp0kgdKRvgyL05XWDRiexs",
+    "authDomain": "loginforumic.firebaseapp.com",
+    "projectId": "loginforumic",
+    "storageBucket": "loginforumic.appspot.com",
+    "messagingSenderId": "536762153558",
+    "appId": "1:536762153558:web:c50b0dc91dee0c29d259f7",
+    "measurementId": "G-C2SXJHP3XH",
+    "databaseURL": "https://loginforumic-default-rtdb.firebaseio.com",
+}
+
+firebase = pyrebase.initialize_app(firebase_config)
+auth = firebase.auth()
+db = firebase.database()
 
 
 class LoginScreen(Screen):
@@ -27,11 +41,6 @@ class LoginScreen(Screen):
 
 class DemoApp(MDApp):
     def build(self):
-        # Initialize Firebase
-        self.firebase = firebase.FirebaseApplication(
-            'https://loginforumic-default-rtdb.firebaseio.com/', None
-        )
-
         Builder.load_file("main.kv")
         Builder.load_file("login.kv")
         Builder.load_file("signup.kv")
@@ -47,62 +56,27 @@ class DemoApp(MDApp):
 
     def handle_signup(self, username, email, password):
         try:
-            # Clean the email by replacing special characters
-            clean_email = email.replace('.', '_dot_').replace('@', '_at_')
+            # Remplacez les points dans l'e-mail par "_dot_"
+            clean_email = email.replace('.', '_dot_').replace(" ", "")
 
-            # Properly encode the email for the URL
-            encoded_email = quote(email, safe='')
+            # Votre chemin Firebase
+            firebase_path = f'/loginForumIC/Users/{clean_email}'
 
-            # Your Firebase URL
-            firebase_url = f'https://loginforumic-default-rtdb.firebaseio.com/users/{encoded_email}.json'
-
-            # Check if the user already exists
-            response = requests.get(firebase_url)
-            if response.status_code == 200 and response.json() is not None:
+            # Vérifiez si l'utilisateur existe déjà
+            user_data = db.child(firebase_path).get().val()
+            if user_data is not None:
                 print("User already exists")
                 return
 
-            # If the user doesn't exist, create a new account
+            # Si l'utilisateur n'existe pas, créez un nouveau compte
             user_data = {
                 'username': username,
                 'email': email,
                 'password': password
             }
 
-            response = requests.put(firebase_url, json=user_data)
-
-            if response.status_code == 200:
-                print("Signup successful!")
-            else:
-                print(f"An error occurred: {response.status_code}")
-                print("Response content:", response.content.decode())
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-    def signup(self, username, email, password):
-        try:
-            # Properly encode the email for the URL
-            encoded_email = quote_plus(email)
-
-            # Your Firebase URL
-            firebase_url = f'https://loginforumic-default-rtdb.firebaseio.com/users/{encoded_email}.json'
-
-            # Check if the user already exists
-            response = requests.get(firebase_url)
-            if response.status_code == 200 and response.json() is not None:
-                print("User already exists")
-                return
-
-            # If the user doesn't exist, create a new account
-            user_data = {
-                'username': username,
-                'email': email,
-                'password': password
-            }
-
-            # Use UrlRequest to handle URL encoding
-            UrlRequest(firebase_url, method='PUT', req_body=user_data)
+            # Utilisez push() pour générer une clé unique pour le nouvel utilisateur
+            db.child(firebase_path).set(user_data)
 
             print("Signup successful!")
 
@@ -113,11 +87,12 @@ class DemoApp(MDApp):
 
     def handle_login(self, email, password):
         try:
+            # Supprimer les espaces de l'email
             # Clean the email by replacing special characters
-            clean_email = email.replace('.', '_dot_').replace('@', '_at_')
+            clean_email = email.replace('.', '_dot_').replace(" ", "")
 
             # Your Firebase URL
-            firebase_url = f'https://loginforumic-default-rtdb.firebaseio.com/users/{clean_email}.json'
+            firebase_url = f'https://loginforumic-default-rtdb.firebaseio.com/loginForumIC/Users/{clean_email}.json'
 
             # Send a GET request to Firebase
             response = requests.get(firebase_url)
@@ -156,6 +131,12 @@ class DemoApp(MDApp):
 
         except Exception as e:
             print(f"An error occurred: {e}")
+
+    def password_toggle(self, password_input):
+        # Toggle password visibility when the eye icon button is pressed
+        password_input.password = not password_input.password
+        password_input.password_mask = '•' if password_input.password else ''
+        password_input.focus = True  # Maintain focus on the input field after toggle
 
 
 if __name__ == "__main__":
